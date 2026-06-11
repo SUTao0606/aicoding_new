@@ -1,5 +1,7 @@
 import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import type { Conversation, Message, ModelId } from '../types'
+import { STORAGE_KEY, stripImages } from '../utils/storage'
 
 function uid(): string {
   // crypto.randomUUID 在现代浏览器可用；做个保底
@@ -18,6 +20,8 @@ interface ChatState {
   setConversationModel: (id: string, model: ModelId) => void
   renameConversation: (id: string, title: string) => void
   getActiveConversation: () => Conversation | undefined
+  // 导入：按 id 去重合并（跳过已存在），返回 [导入数, 跳过数]
+  importConversations: (incoming: Conversation[]) => { added: number; skipped: number }
 
   // 消息级
   addMessage: (convId: string, message: Message) => void
@@ -26,7 +30,9 @@ interface ChatState {
   removeMessage: (convId: string, msgId: string) => void
 }
 
-export const useChatStore = create<ChatState>((set, get) => ({
+export const useChatStore = create<ChatState>()(
+  persist(
+    (set, get) => ({
   conversations: [],
   activeConversationId: null,
 
@@ -78,6 +84,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
     return conversations.find((c) => c.id === activeConversationId)
   },
 
+  importConversations: (incoming) => {
+    const existing = new Set(get().conversations.map((c) => c.id))
+    const fresh = incoming.filter((c) => !existing.has(c.id))
+    if (fresh.length > 0) {
+      set((s) => ({
+        conversations: [...s.conversations, ...fresh].sort((a, b) => b.createdAt - a.createdAt),
+      }))
+    }
+    return { added: fresh.length, skipped: incoming.length - fresh.length }
+  },
+
   addMessage: (convId, message) =>
     set((s) => ({
       conversations: s.conversations.map((c) =>
@@ -124,4 +141,29 @@ export const useChatStore = create<ChatState>((set, get) => ({
           : c,
       ),
     })),
-}))
+    }),
+    {
+      name: STORAGE_KEY,
+      // 持久化前剔除 base64 图片，避免撑爆 localStorage
+      storage: createJSONStorage(() => ({
+        getItem: (name) => localStorage.getItem(name),
+        setItem: (name, value) => {
+          try {
+            const parsed = JSON.parse(value) as {
+              state: { conversations: Conversation[] }
+            }
+            parsed.state.conversations = stripImages(parsed.state.conversations)
+            localStorage.setItem(name, JSON.stringify(parsed))
+          } catch {
+            localStorage.setItem(name, value)
+          }
+        },
+        removeItem: (name) => localStorage.removeItem(name),
+      })),
+      partialize: (s) => ({
+        conversations: s.conversations,
+        activeConversationId: s.activeConversationId,
+      }),
+    },
+  ),
+)
