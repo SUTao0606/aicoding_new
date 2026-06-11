@@ -14,8 +14,8 @@ export function Toaster() {
           key={t.id}
           className={`pointer-events-auto flex max-w-sm items-start gap-2 rounded-lg border px-4 py-3 text-sm shadow-lg ${
             t.type === 'error'
-              ? 'border-red-200 bg-red-50 text-red-700'
-              : 'border-indigo-200 bg-white text-gray-700'
+              ? 'border-red-200 bg-red-50 text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300'
+              : 'border-indigo-200 bg-white text-gray-700 dark:border-indigo-500/30 dark:bg-gray-800 dark:text-gray-200'
           }`}
         >
           {t.type === 'error' ? (

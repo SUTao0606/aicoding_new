@@ -5,6 +5,19 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>千问 Chat</title>
+    <script>
+      // 防首屏闪烁：在渲染前根据持久化设置 / 系统偏好设置主题 class
+      (function () {
+        try {
+          var raw = localStorage.getItem('qwen_settings')
+          var theme = raw && JSON.parse(raw).state && JSON.parse(raw).state.theme
+          if (!theme) {
+            theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+          }
+          if (theme === 'dark') document.documentElement.classList.add('dark')
+        } catch (e) {}
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

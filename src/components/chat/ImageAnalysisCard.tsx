@@ -33,8 +33,8 @@ export function ImageAnalysisCard({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-      <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50 px-4 py-2 text-xs font-medium text-gray-500">
+    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+      <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50 px-4 py-2 text-xs font-medium text-gray-500 dark:border-gray-700 dark:bg-gray-800/60 dark:text-gray-400">
         <ImageIcon className="h-3.5 w-3.5" />
         图片分析
       </div>
@@ -47,19 +47,23 @@ export function ImageAnalysisCard({
               key={i}
               src={src}
               alt={`分析图片 ${i + 1}`}
-              className="h-[120px] w-[160px] rounded-lg border border-gray-200 object-cover"
+              className="h-[120px] w-[160px] rounded-lg border border-gray-200 object-cover dark:border-gray-700"
             />
           ))}
         </div>
 
         {/* 右：提问 + 分析 */}
         <div className="min-w-0 flex-1">
-          {prompt && <p className="mb-2 text-sm font-medium text-gray-700">{prompt}</p>}
+          {prompt && (
+            <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">{prompt}</p>
+          )}
           <div
-            className={`markdown-body text-gray-800 ${
+            className={`markdown-body text-gray-800 dark:text-gray-100 ${
               streaming ? 'streaming-cursor' : ''
             } ${
-              assistantMessage.error ? 'rounded-lg border border-red-200 bg-red-50 p-2 text-red-700' : ''
+              assistantMessage.error
+                ? 'rounded-lg border border-red-200 bg-red-50 p-2 text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300'
+                : ''
             }`}
           >
             <Markdown>{analysis}</Markdown>
@@ -71,7 +75,7 @@ export function ImageAnalysisCard({
                 type="button"
                 onClick={handleCopy}
                 title="复制分析"
-                className="flex items-center gap-1 rounded px-1.5 py-0.5 hover:bg-gray-100 hover:text-gray-600"
+                className="flex items-center gap-1 rounded px-1.5 py-0.5 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
               >
                 {copied ? (
                   <>
@@ -87,7 +91,7 @@ export function ImageAnalysisCard({
                   type="button"
                   onClick={onRegenerate}
                   title="重新生成"
-                  className="flex items-center gap-1 rounded px-1.5 py-0.5 hover:bg-gray-100 hover:text-gray-600"
+                  className="flex items-center gap-1 rounded px-1.5 py-0.5 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
                   <span>重新生成</span>

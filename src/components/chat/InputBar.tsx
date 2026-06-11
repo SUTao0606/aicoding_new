@@ -98,7 +98,7 @@ export function InputBar({ isStreaming, onSend, onStop }: Props) {
   const canSend = (!!value.trim() || images.length > 0) && !isStreaming
 
   return (
-    <div className="shrink-0 border-t border-gray-200 bg-white px-4 py-3">
+    <div className="shrink-0 border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-900">
       <div
         className={`mx-auto max-w-3xl rounded-xl ${dragOver ? 'ring-2 ring-indigo-400' : ''}`}
         onDragOver={(e) => {
@@ -116,7 +116,7 @@ export function InputBar({ isStreaming, onSend, onStop }: Props) {
                 <img
                   src={src}
                   alt={`upload-${idx}`}
-                  className="h-16 w-16 rounded-lg border border-gray-200 object-cover"
+                  className="h-16 w-16 rounded-lg border border-gray-200 object-cover dark:border-gray-700"
                 />
                 <button
                   type="button"
@@ -146,7 +146,7 @@ export function InputBar({ isStreaming, onSend, onStop }: Props) {
             onClick={() => fileInputRef.current?.click()}
             disabled={isStreaming}
             title="上传图片"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-gray-300 text-gray-500 transition hover:bg-gray-50 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-gray-300 text-gray-500 transition hover:bg-gray-50 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-indigo-400"
           >
             <Paperclip className="h-4 w-4" />
           </button>
@@ -165,7 +165,7 @@ export function InputBar({ isStreaming, onSend, onStop }: Props) {
             placeholder={
               isStreaming ? '正在生成回复…' : '输入消息，可粘贴/拖拽图片，Enter 发送，Shift+Enter 换行'
             }
-            className="max-h-[200px] flex-1 resize-none rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm leading-6 text-gray-800 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 disabled:bg-gray-50 disabled:text-gray-400"
+            className="max-h-[200px] flex-1 resize-none rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm leading-6 text-gray-800 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 disabled:bg-gray-50 disabled:text-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:ring-indigo-500/30 dark:disabled:bg-gray-800/50 dark:disabled:text-gray-500"
           />
 
           {isStreaming ? (

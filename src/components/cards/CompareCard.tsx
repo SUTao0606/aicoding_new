@@ -11,7 +11,7 @@ interface TableProps {
  */
 export function CompareCard({ children }: TableProps) {
   return (
-    <div className="my-3 overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+    <div className="my-3 overflow-x-auto rounded-lg border border-gray-200 shadow-sm dark:border-gray-700">
       <table style={{ margin: 0 }} className="w-full min-w-[420px] border-collapse">
         {children}
       </table>

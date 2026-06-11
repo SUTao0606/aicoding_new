@@ -19,11 +19,18 @@ function formatTime(ts: number): string {
   return `${hh}:${mm}`
 }
 
+const COLLAPSE_LINES = 10 // 用户长文本消息超过此行数时折叠
+
 export function MessageBubble({ message, isLastAssistant, canRegenerate, onRegenerate }: Props) {
   const [copied, setCopied] = useState(false)
+  const [expanded, setExpanded] = useState(false)
   const isUser = message.role === 'user'
   const text = messageText(message.content)
   const images = messageImages(message.content)
+
+  // 超过 10 行的用户文本默认折叠
+  const lineCount = text ? text.split('\n').length : 0
+  const collapsible = isUser && lineCount > COLLAPSE_LINES
 
   const handleCopy = async () => {
     const ok = await copyText(text)
@@ -50,8 +57,8 @@ export function MessageBubble({ message, isLastAssistant, canRegenerate, onRegen
             isUser
               ? 'bg-indigo-600 text-white'
               : message.error
-                ? 'border border-red-200 bg-red-50 text-red-700'
-                : 'border border-gray-200 bg-white text-gray-800'
+                ? 'border border-red-200 bg-red-50 text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300'
+                : 'border border-gray-200 bg-white text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100'
           }`}
         >
           {isUser ? (
@@ -68,7 +75,26 @@ export function MessageBubble({ message, isLastAssistant, canRegenerate, onRegen
                   ))}
                 </div>
               )}
-              {text && <div className="whitespace-pre-wrap break-words">{text}</div>}
+              {text && (
+                <div>
+                  <div
+                    className={`whitespace-pre-wrap break-words ${
+                      collapsible && !expanded ? 'line-clamp-10' : ''
+                    }`}
+                  >
+                    {text}
+                  </div>
+                  {collapsible && (
+                    <button
+                      type="button"
+                      onClick={() => setExpanded((v) => !v)}
+                      className="mt-1 text-xs font-medium text-indigo-200 underline-offset-2 hover:underline"
+                    >
+                      {expanded ? '收起' : '展开'}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
             <div
@@ -95,7 +121,7 @@ export function MessageBubble({ message, isLastAssistant, canRegenerate, onRegen
                 type="button"
                 onClick={handleCopy}
                 title="复制"
-                className="flex items-center gap-1 rounded px-1.5 py-0.5 hover:bg-gray-100 hover:text-gray-600"
+                className="flex items-center gap-1 rounded px-1.5 py-0.5 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
               >
                 {copied ? (
                   <>
@@ -112,7 +138,7 @@ export function MessageBubble({ message, isLastAssistant, canRegenerate, onRegen
                   type="button"
                   onClick={onRegenerate}
                   title="重新生成"
-                  className="flex items-center gap-1 rounded px-1.5 py-0.5 hover:bg-gray-100 hover:text-gray-600"
+                  className="flex items-center gap-1 rounded px-1.5 py-0.5 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
                   <span>重新生成</span>

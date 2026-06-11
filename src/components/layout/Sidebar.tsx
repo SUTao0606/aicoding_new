@@ -6,7 +6,13 @@ import { useSettingStore } from '../../store/settingStore'
 import { useToastStore } from '../../store/toastStore'
 import { exportConversations, parseImportFile } from '../../utils/storage'
 
-export function Sidebar() {
+interface Props {
+  /** 移动端抽屉是否打开（桌面端忽略，始终内联展示） */
+  open: boolean
+  onClose: () => void
+}
+
+export function Sidebar({ open, onClose }: Props) {
   const conversations = useChatStore((s) => s.conversations)
   const activeId = useChatStore((s) => s.activeConversationId)
   const createConversation = useChatStore((s) => s.createConversation)
@@ -48,6 +54,16 @@ export function Sidebar() {
     }
   }
 
+  const handleNew = () => {
+    createConversation(currentModel)
+    onClose()
+  }
+
+  const handleSelect = (id: string) => {
+    selectConversation(id)
+    onClose()
+  }
+
   const handleExport = () => {
     if (conversations.length === 0) {
       showToast('暂无会话可导出', 'error')
@@ -72,12 +88,12 @@ export function Sidebar() {
 
   const deleteTarget = conversations.find((c) => c.id === pendingDelete)
 
-  return (
-    <aside className="flex w-60 shrink-0 flex-col border-r border-gray-200 bg-gray-50">
+  const sidebarBody = (
+    <>
       <div className="p-3">
         <button
           type="button"
-          onClick={() => createConversation(currentModel)}
+          onClick={handleNew}
           className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-indigo-700"
         >
           <Plus className="h-4 w-4" />
@@ -95,9 +111,11 @@ export function Sidebar() {
             return (
               <div
                 key={c.id}
-                onClick={() => !editing && selectConversation(c.id)}
+                onClick={() => !editing && handleSelect(c.id)}
                 className={`group flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm ${
-                  active ? 'bg-indigo-100 text-indigo-800' : 'text-gray-700 hover:bg-gray-100'
+                  active
+                    ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-200'
+                    : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
                 }`}
               >
                 <MessageSquare className="h-4 w-4 shrink-0 opacity-60" />
@@ -109,7 +127,7 @@ export function Sidebar() {
                     onBlur={commitEdit}
                     onKeyDown={handleEditKey}
                     onClick={(e) => e.stopPropagation()}
-                    className="min-w-0 flex-1 rounded border border-indigo-300 bg-white px-1 py-0.5 text-sm outline-none"
+                    className="min-w-0 flex-1 rounded border border-indigo-300 bg-white px-1 py-0.5 text-sm outline-none dark:border-indigo-500 dark:bg-gray-700 dark:text-gray-100"
                   />
                 ) : (
                   <span
@@ -132,7 +150,7 @@ export function Sidebar() {
                         e.stopPropagation()
                         startEdit(c.id, c.title)
                       }}
-                      className="rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-indigo-600"
+                      className="rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-indigo-600 dark:hover:bg-gray-700"
                     >
                       <Pencil className="h-3.5 w-3.5" />
                     </button>
@@ -143,7 +161,7 @@ export function Sidebar() {
                         e.stopPropagation()
                         setPendingDelete(c.id)
                       }}
-                      className="rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-red-500"
+                      className="rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-red-500 dark:hover:bg-gray-700"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -156,11 +174,11 @@ export function Sidebar() {
       </nav>
 
       {/* 底部：导出 / 导入 */}
-      <div className="flex gap-2 border-t border-gray-200 p-3">
+      <div className="flex gap-2 border-t border-gray-200 p-3 dark:border-gray-700">
         <button
           type="button"
           onClick={handleExport}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-600 transition hover:bg-gray-50"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-600 transition hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
         >
           <Download className="h-3.5 w-3.5" />
           导出全部
@@ -168,7 +186,7 @@ export function Sidebar() {
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-600 transition hover:bg-gray-50"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-600 transition hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
         >
           <Upload className="h-3.5 w-3.5" />
           导入
@@ -181,6 +199,29 @@ export function Sidebar() {
           onChange={handleImportPick}
         />
       </div>
+    </>
+  )
+
+  return (
+    <>
+      {/* 桌面端：固定内联侧边栏 */}
+      <aside className="hidden w-60 shrink-0 flex-col border-r border-gray-200 bg-gray-50 md:flex dark:border-gray-700 dark:bg-gray-900">
+        {sidebarBody}
+      </aside>
+
+      {/* 移动端：抽屉 */}
+      <Dialog.Root open={open} onOpenChange={(o) => !o && onClose()}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 z-[80] bg-black/40 md:hidden" />
+          <Dialog.Content
+            aria-describedby={undefined}
+            className="fixed inset-y-0 left-0 z-[81] flex w-64 max-w-[80vw] flex-col border-r border-gray-200 bg-gray-50 shadow-xl focus:outline-none md:hidden dark:border-gray-700 dark:bg-gray-900"
+          >
+            <Dialog.Title className="sr-only">会话列表</Dialog.Title>
+            {sidebarBody}
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
 
       {/* 删除二次确认 */}
       <Dialog.Root open={pendingDelete !== null} onOpenChange={(o) => !o && setPendingDelete(null)}>
@@ -188,17 +229,19 @@ export function Sidebar() {
           <Dialog.Overlay className="fixed inset-0 z-[90] bg-black/40" />
           <Dialog.Content
             aria-describedby={undefined}
-            className="fixed left-1/2 top-1/2 z-[91] w-[90vw] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white p-5 shadow-2xl"
+            className="fixed left-1/2 top-1/2 z-[91] w-[90vw] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white p-5 shadow-2xl dark:bg-gray-800"
           >
-            <Dialog.Title className="text-base font-semibold text-gray-800">删除会话</Dialog.Title>
-            <p className="mt-2 text-sm text-gray-500">
+            <Dialog.Title className="text-base font-semibold text-gray-800 dark:text-gray-100">
+              删除会话
+            </Dialog.Title>
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
               确定删除「{deleteTarget?.title ?? ''}」吗？此操作无法撤销。
             </p>
             <div className="mt-5 flex justify-end gap-2">
               <Dialog.Close asChild>
                 <button
                   type="button"
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
+                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
                 >
                   取消
                 </button>
@@ -217,6 +260,6 @@ export function Sidebar() {
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
-    </aside>
+    </>
   )
 }
