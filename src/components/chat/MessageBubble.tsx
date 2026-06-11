@@ -1,12 +1,8 @@
 import { useState } from 'react'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import rehypeHighlight from 'rehype-highlight'
-import rehypeRaw from 'rehype-raw'
-import rehypeSanitize from 'rehype-sanitize'
 import { Check, Copy, RotateCcw, User, Sparkles } from 'lucide-react'
-import { messageText, type Message } from '../../types'
+import { messageImages, messageText, type Message } from '../../types'
 import { copyText } from '../../utils/clipboard'
+import { Markdown } from './Markdown'
 
 interface Props {
   message: Message
@@ -27,6 +23,7 @@ export function MessageBubble({ message, isLastAssistant, canRegenerate, onRegen
   const [copied, setCopied] = useState(false)
   const isUser = message.role === 'user'
   const text = messageText(message.content)
+  const images = messageImages(message.content)
 
   const handleCopy = async () => {
     const ok = await copyText(text)
@@ -58,19 +55,28 @@ export function MessageBubble({ message, isLastAssistant, canRegenerate, onRegen
           }`}
         >
           {isUser ? (
-            <div className="whitespace-pre-wrap break-words">{text}</div>
+            <div className="flex flex-col gap-2">
+              {images.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {images.map((src, i) => (
+                    <img
+                      key={i}
+                      src={src}
+                      alt={`图片 ${i + 1}`}
+                      className="max-h-48 max-w-[200px] rounded-lg object-cover"
+                    />
+                  ))}
+                </div>
+              )}
+              {text && <div className="whitespace-pre-wrap break-words">{text}</div>}
+            </div>
           ) : (
             <div
               className={`markdown-body ${
                 message.isStreaming && text.length === 0 ? 'streaming-cursor min-h-[1.2em]' : ''
               } ${message.isStreaming && text.length > 0 ? 'streaming-cursor' : ''}`}
             >
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                rehypePlugins={[rehypeRaw, rehypeSanitize, rehypeHighlight]}
-              >
-                {text}
-              </ReactMarkdown>
+              <Markdown>{text}</Markdown>
             </div>
           )}
         </div>

@@ -1,8 +1,10 @@
 import { useCallback, useRef, useState } from 'react'
 import { useChatStore } from '../store/chatStore'
 import { useSettingStore } from '../store/settingStore'
+import { useToastStore } from '../store/toastStore'
 import { streamChat, isAbortError } from '../api/chat'
-import type { Message } from '../types'
+import { buildMultimodalContent } from '../utils/image'
+import { DEFAULT_VISION_MODEL, isVisionModel, messageText, type Message } from '../types'
 
 function uid(): string {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
@@ -68,9 +70,9 @@ export function useChat() {
   }, [])
 
   const send = useCallback(
-    async (text: string) => {
+    async (text: string, images: string[] = []) => {
       const trimmed = text.trim()
-      if (!trimmed || isStreaming) return
+      if ((!trimmed && images.length === 0) || isStreaming) return
 
       const store = useChatStore.getState()
       let convId = store.activeConversationId
@@ -78,18 +80,35 @@ export function useChat() {
         convId = store.createConversation(useSettingStore.getState().currentModel)
       }
 
+      // 有图片但当前模型非 VL → 自动切换为 qwen-vl-plus
+      if (images.length > 0) {
+        const conv = store.conversations.find((c) => c.id === convId)
+        if (conv && !isVisionModel(conv.model)) {
+          store.setConversationModel(convId, DEFAULT_VISION_MODEL)
+          useSettingStore.getState().setModel(DEFAULT_VISION_MODEL)
+          useToastStore
+            .getState()
+            .showToast(`当前模型不支持图片，已自动切换为 ${DEFAULT_VISION_MODEL}`)
+        }
+      }
+
+      // 构造消息内容：有图 → 多模态数组；无图 → 纯文本
+      const content =
+        images.length > 0 ? buildMultimodalContent(trimmed, images) : trimmed
+
       const userMsg: Message = {
         id: uid(),
         role: 'user',
-        content: trimmed,
+        content,
         timestamp: Date.now(),
       }
       store.addMessage(convId, userMsg)
 
-      // 首条用户消息 → 自动生成会话标题（取前 20 字）
+      // 首条用户消息 → 自动生成会话标题
       const conv = useChatStore.getState().conversations.find((c) => c.id === convId)
       if (conv && conv.messages.filter((m) => m.role === 'user').length === 1) {
-        store.renameConversation(convId, trimmed.slice(0, 20) || '新会话')
+        const titleText = messageText(content).slice(0, 20)
+        store.renameConversation(convId, titleText || '图片对话')
       }
 
       await runStream(convId)

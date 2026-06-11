@@ -57,6 +57,26 @@ export const MODEL_OPTIONS: ModelOption[] = [
 
 export const DEFAULT_MODEL: ModelId = 'qwen-plus'
 
+// 视觉（VL）模型相关
+export const DEFAULT_VISION_MODEL: ModelId = 'qwen-vl-plus'
+
+export function isVisionModel(model: ModelId): boolean {
+  return model.startsWith('qwen-vl-')
+}
+
+// 判断消息内容是否包含图片
+export function hasImage(content: Message['content']): boolean {
+  return Array.isArray(content) && content.some((p) => p.type === 'image_url')
+}
+
+// 取消息中的图片 URL 列表
+export function messageImages(content: Message['content']): string[] {
+  if (!Array.isArray(content)) return []
+  return content
+    .filter((p) => p.type === 'image_url' && p.image_url?.url)
+    .map((p) => p.image_url!.url)
+}
+
 // 取消息纯文本（多模态时拼接文本块），供复制 / 标题生成等用
 export function messageText(content: Message['content']): string {
   if (typeof content === 'string') return content
